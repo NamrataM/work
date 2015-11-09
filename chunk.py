@@ -44,17 +44,17 @@ while pos_uuid>=0:
     print "Going to chunk every variable"
     # put a for loop from 1 to 3, based on value assign the variable data either sst_data,err_data and sif_data
     for loop in range(1,3):
-        if (loop == 1):
+        if loop == 1:
             data = sst_data
             pos_start = sst_start+16
             pos_end = sst_end
             print "chunking sst"
-        else if (loop == 2):
+        elif loop == 2:
             data = err_data
             pos_start = err_start+18
             pos_end = err_end
             print "chunking err"
-        else if (loop == 3):
+        elif loop == 3:
             data = sif_data
             pos_start = sif_start+20
             pos_end = sif_end
