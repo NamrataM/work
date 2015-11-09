@@ -1,4 +1,6 @@
 import numpy as np
+import os
+import time
 def blockshaped(arr, nrows, ncols):
     """
     Return an array of shape (n, nrows, ncols) where
@@ -14,7 +16,7 @@ def blockshaped(arr, nrows, ncols):
 
 
 #c = np.arange(320000).reshape((400,800)) #auto generating the values
-
+ts1 = time.time()
 #getting dumped values from file
 fadm = open("GlobL4/SIF/newfile.adm","r+")
 filecontent = fadm.read()
@@ -39,21 +41,24 @@ while pos_uuid>=0:
     sif_end = filecontent.find('}}}',sif_start)
     sif_data = filecontent[sif_start+21:sif_end]
     
-
+    print "Going to chunk every variable"
     # put a for loop from 1 to 3, based on value assign the variable data either sst_data,err_data and sif_data
     for loop in range(1,3):
         if (loop == 1):
             data = sst_data
             pos_start = sst_start+16
             pos_end = sst_end
+            print "chunking sst"
         else if (loop == 2):
             data = err_data
             pos_start = err_start+18
             pos_end = err_end
+            print "chunking err"
         else if (loop == 3):
             data = sif_data
             pos_start = sif_start+20
             pos_end = sif_end
+            print "chunking sif"
         i=1
         sub = ','
         s_temp = data
@@ -70,11 +75,13 @@ while pos_uuid>=0:
 
         json_data1 = '['+ data[0:pos] +']' # 900x1800
         json_data2 = '[' + data[pos+1:] +']' # last row of 1800
+        print "eval starting"
         jarray1 = eval(json_data1)
         jarray2 = eval(json_data2)
 
         big_grid = np.reshape(jarray1,(900,1800))
         grid_row = np.reshape(jarray2,(1,1800))
+        print "block shaped function called"
         first_block = blockshaped(big_grid, 50, 50) #working with 50 rows 100 columns
         last_row = blockshaped(grid_row, 1, 50)
         #print 'first_block:'
@@ -83,12 +90,13 @@ while pos_uuid>=0:
         #print last_row
 
         #chunks = blockshaped(c, 50, 100)
+        print "gathering chunks"
         chunk_write1 = ''
         for i in range(0,647):# interating over every chunk
             for j in range(0, 49):
                 #print chunks[0][j]
                 chunk_write1 = chunk_write1 + str(first_block[0][j])
-    
+        print "nested loop done. writing to string"
         str_comma = chunk_write1.replace(' ',',')
         str_comma = str_comma.replace(',,,',',')
         str_comma = str_comma.replace(',,',',')
@@ -98,6 +106,7 @@ while pos_uuid>=0:
         #print str_comma
 
         # now replace the long array in the adm file with the constructed chunks
+        print "inserting chunk into record"
         new_content = filecontent[0:pos_start]+str_comma+filecontent[pos_end+2:]
         #print new_content
     
@@ -105,3 +114,6 @@ while pos_uuid>=0:
         ########## don't forget to advance to the next fid
     
     pos_uuid = filecontent.find("fid",pos_uuid)
+ts2 = time.time()
+print "Time elapsed"
+print ts2 - ts1
